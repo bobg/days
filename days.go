@@ -1,16 +1,15 @@
 package days
 
+// TODO(bobg): Adjust for Julian/Old-style and Gregorian/New-style
+// dates. (https://en.wikipedia.org/wiki/Old_Style_and_New_Style_dates)
+
+// TODO(bobg): Adjust for the non-existence of the year zero.
+
 // Delta computes the number of days between two dates, each given as
 // Y, M, D. The result is positive iff the first date is earlier than
 // the second, zero if they're the same date, and negative otherwise.
 func Delta(y1, m1, d1, y2, m2, d2 int) int {
-	if y1 > y2 {
-		return -Delta(y2, m2, d2, y1, m1, d1)
-	}
-	if y1 == y2 && m1 > m2 {
-		return -Delta(y2, m2, d2, y1, m1, d1)
-	}
-	if y1 == y2 && m1 == m2 && d1 > d2 {
+	if !IsOrdered(y1, m1, d1, y2, m2, d2) {
 		return -Delta(y2, m2, d2, y1, m1, d1)
 	}
 	// now date1 <= date2
@@ -38,16 +37,56 @@ func DeltaInYear(year, m1, d1, m2, d2 int) int {
 	if m1 == m2 {
 		return d2 - d1
 	}
-	result := MonthLen(year, m1) - d1 + 1 // days to end of month 1
-	result += d2 - 1                      // days from start of month 2
+	result := DaysInMonth(year, m1) - d1 + 1 // days to end of month 1
+	result += d2 - 1                         // days from start of month 2
 	for m := m1 + 1; m < m2; m++ {
-		result += MonthLen(year, m)
+		result += DaysInMonth(year, m)
 	}
 	return result
 }
 
-// MonthLen reports the number of days in a given month.
-func MonthLen(year, month int) int {
+// DeltaYD computes the delta in years+days between two dates.
+func DeltaYD(y1, m1, d1, y2, m2, d2 int) (dy, dd int) {
+	if !IsOrdered(y1, m1, d1, y2, m2, d2) {
+		dy, dd = DeltaYD(y2, m2, d2, y1, d1, m1)
+		// xxx adjust so dd is >= 0
+		return dy, dd
+	}
+	if y1 == y2 {
+		return 0, DeltaInYear(y1, m1, d1, m2, d2)
+	}
+	// xxx
+	return dy, dd
+}
+
+func IsOrdered(y1, m1, d1, y2, m2, d2 int) bool {
+	if y1 < y2 {
+		return true
+	}
+	if y1 == y2 && m1 < m2 {
+		return true
+	}
+	if y1 == y2 && m1 == m2 {
+		return d1 <= d2
+	}
+	return false
+}
+
+func IsValid(y, m, d int) bool {
+	if y == 0 {
+		return false
+	}
+	if m < 1 || m > 12 {
+		return false
+	}
+	if d < 1 || d > DaysInMonth(y, m) {
+		return false
+	}
+	return true
+}
+
+// DaysInMonth reports the number of days in a given month.
+func DaysInMonth(year, month int) int {
 	switch month {
 	case 1, 3, 5, 7, 8, 10, 12:
 		return 31
@@ -66,7 +105,8 @@ func MonthLen(year, month int) int {
 	return 28
 }
 
-// CountLeapYears counts the number of leap years between year y1 and year y2, inclusive.
+// CountLeapYears counts the number of leap years between year y1 and
+// year y2, inclusive.
 func CountLeapYears(y1, y2 int) int {
 	if y1 > y2 {
 		return CountLeapYears(y2, y1)
