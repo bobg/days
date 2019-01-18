@@ -48,15 +48,28 @@ func DeltaInYear(year, m1, d1, m2, d2 int) int {
 // DeltaYD computes the delta in years+days between two dates.
 func DeltaYD(y1, m1, d1, y2, m2, d2 int) (dy, dd int) {
 	if !IsOrdered(y1, m1, d1, y2, m2, d2) {
-		dy, dd = DeltaYD(y2, m2, d2, y1, d1, m1)
-		// xxx adjust so dd is >= 0
-		return dy, dd
+		dy, dd = DeltaYD(y2, m2, d2, y1, m1, d1)
+		return -dy, -dd
 	}
 	if y1 == y2 {
 		return 0, DeltaInYear(y1, m1, d1, m2, d2)
 	}
-	// xxx
-	return dy, dd
+	dy = y2 - y1 - 1 // the number of full years between y1 and y2
+	if m1 < m2 || (m1 == m2 && d1 <= d2) {
+		dy++
+
+		y1a, m1a, d1a := y2, m1, d1
+		if !IsValid(y1a, m1a, d1a) {
+			// m1/d1 is 2/29 and y2 isn't a leap year
+			m1a, d1a = 3, 1
+		}
+
+		dd = Delta(y1a, m1a, d1a, y2, m2, d2)
+		return
+	}
+	dd = DeltaInYear(y1, m1, d1, 12, 31) + 1
+	dd += DeltaInYear(y2, 1, 1, m2, d2)
+	return
 }
 
 func IsOrdered(y1, m1, d1, y2, m2, d2 int) bool {

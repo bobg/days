@@ -1,11 +1,15 @@
 package days
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestDelta(t *testing.T) {
 	cases := []struct {
-		y1, m1, d1, y2, m2, d2 int
-		want                   int
+		y1, m1, d1 int
+		y2, m2, d2 int
+		want       int
 	}{
 		{2000, 1, 1, 2000, 1, 1, 0},
 		{2000, 1, 1, 2000, 1, 2, 1},
@@ -19,11 +23,13 @@ func TestDelta(t *testing.T) {
 		{1904, 2, 1, 1904, 3, 1, 29},
 		{2000, 2, 1, 2000, 3, 1, 29},
 	}
-	for _, c := range cases {
-		d := Delta(c.y1, c.m1, c.d1, c.y2, c.m2, c.d2)
-		if d != c.want {
-			t.Errorf("case %d/%d/%d-%d/%d/%d: got %d, want %d", c.y1, c.m1, c.d1, c.y2, c.m2, c.d2, d, c.want)
-		}
+	for i, c := range cases {
+		t.Run(fmt.Sprintf("case_%d", i+1), func(t *testing.T) {
+			d := Delta(c.y1, c.m1, c.d1, c.y2, c.m2, c.d2)
+			if d != c.want {
+				t.Errorf("got %d, want %d", d, c.want)
+			}
+		})
 	}
 }
 
@@ -43,10 +49,40 @@ func TestCountLeapYears(t *testing.T) {
 		{1900, 1904, 1},
 		{1895, 1905, 2},
 	}
-	for _, c := range cases {
-		l := CountLeapYears(c.y1, c.y2)
-		if l != c.want {
-			t.Errorf("case %d-%d: got %d, want %d", c.y1, c.y2, l, c.want)
-		}
+	for i, c := range cases {
+		t.Run(fmt.Sprintf("case_%d", i+1), func(t *testing.T) {
+			l := CountLeapYears(c.y1, c.y2)
+			if l != c.want {
+				t.Errorf("got %d, want %d", l, c.want)
+			}
+		})
+	}
+}
+
+func TestDeltaYD(t *testing.T) {
+	cases := []struct {
+		y1, m1, d1   int
+		y2, m2, d2   int
+		wantY, wantD int
+	}{
+		{2000, 1, 1, 2000, 1, 1, 0, 0},
+		{2000, 1, 1, 2000, 1, 2, 0, 1},
+		{2000, 1, 2, 2000, 1, 1, 0, -1},
+		{2000, 1, 1, 2000, 2, 1, 0, 31},
+		{2000, 1, 1, 2000, 3, 1, 0, 60},
+		{1999, 12, 31, 2000, 1, 1, 0, 1},
+		{2003, 1, 1, 2004, 1, 1, 1, 0},
+		{2003, 1, 1, 2005, 1, 1, 2, 0},
+		{1900, 2, 1, 1900, 3, 1, 0, 28},
+		{1904, 2, 1, 1904, 3, 1, 0, 29},
+		{2000, 2, 1, 2000, 3, 1, 0, 29},
+	}
+	for i, c := range cases {
+		t.Run(fmt.Sprintf("case_%d", i+1), func(t *testing.T) {
+			dy, dd := DeltaYD(c.y1, c.m1, c.d1, c.y2, c.m2, c.d2)
+			if dy != c.wantY || dd != c.wantD {
+				t.Errorf("got %d, %d; want %d, %d", dy, dd, c.wantY, c.wantD)
+			}
+		})
 	}
 }
